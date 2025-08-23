@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
+import jwt from 'jsonwebtoken'
 import { DatabaseService } from './DatabaseService'
 import { User, LoginRequest, SignUpRequest, AuthResponse, OAuthProfile, AuthConfig, AuthError, ConflictError, UnauthorizedError, NotFoundError } from '../types'
 import { v4 as uuidv4 } from 'uuid'
@@ -374,17 +375,19 @@ export class AuthService {
   // Private Helper Methods
   private async generateTokens(user: User): Promise<{ accessToken: string; refreshToken: string }> {
     const payload = {
-      sub: user.id,
+      user_id: user.id, // Change from 'sub' to 'user_id' to match Context Manager expectation
       email: user.email,
       name: user.name,
       workspace_id: user.workspace_id,
-      role: user.role,
-      iat: Math.floor(Date.now() / 1000)
+      role: user.role
     }
 
-    // Generate access token (implement JWT signing)
-    const accessToken = Buffer.from(JSON.stringify({ ...payload, exp: Math.floor(Date.now() / 1000) + this.parseExpiration(this.config.jwt_expires_in) }))
-      .toString('base64')
+    // Generate access token with proper JWT signing  
+    const expirationInSeconds = this.parseExpiration(this.config.jwt_expires_in)
+    const accessToken = jwt.sign({
+      ...payload,
+      exp: Math.floor(Date.now() / 1000) + expirationInSeconds
+    }, this.config.jwt_secret)
 
     // Generate refresh token
     const refreshTokenValue = crypto.randomBytes(32).toString('hex')

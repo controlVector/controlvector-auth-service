@@ -3,6 +3,7 @@ import cors from '@fastify/cors'
 import helmet from '@fastify/helmet'
 import cookie from '@fastify/cookie'
 import rateLimit from '@fastify/rate-limit'
+import jwt from '@fastify/jwt'
 import dotenv from 'dotenv'
 import { registerRoutes } from './routes'
 import { AuthConfig } from './types'
@@ -91,6 +92,11 @@ async function start() {
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax'
       }
+    })
+
+    // JWT authentication
+    await server.register(jwt, {
+      secret: config.jwt_secret
     })
 
     // Rate limiting
