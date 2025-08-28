@@ -17,8 +17,8 @@ const config: AuthConfig = {
   
   // JWT Configuration
   jwt_secret: process.env.JWT_SECRET || 'controlvector-auth-development-secret-key',
-  jwt_expires_in: process.env.JWT_EXPIRES_IN || '1h',
-  refresh_token_expires_in: process.env.REFRESH_TOKEN_EXPIRES_IN || '7d',
+  jwt_expires_in: process.env.JWT_EXPIRES_IN || (process.env.NODE_ENV === 'development' ? '8h' : '1h'),
+  refresh_token_expires_in: process.env.REFRESH_TOKEN_EXPIRES_IN || '30d',
   
   // Database (using in-memory store for demo)
   database_url: process.env.DATABASE_URL || '',

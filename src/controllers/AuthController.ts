@@ -57,6 +57,20 @@ export function createAuthController(authService: AuthService): AuthController {
   return { authService }
 }
 
+// Helper function for setting refresh token cookies with dev/op friendly durations
+function setRefreshTokenCookie(reply: FastifyReply, refreshToken: string) {
+  const cookieMaxAge = process.env.NODE_ENV === 'development' 
+    ? 30 * 24 * 60 * 60 // 30 days for development
+    : 7 * 24 * 60 * 60  // 7 days for production
+  
+  reply.setCookie('refresh_token', refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: cookieMaxAge
+  })
+}
+
 // Email/Password Authentication
 export async function login(
   this: AuthController,
@@ -67,13 +81,8 @@ export async function login(
     const body = LoginSchema.parse(request.body)
     const result = await this.authService.login(body)
 
-    // Set refresh token as HTTP-only cookie
-    reply.setCookie('refresh_token', result.refresh_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 // 7 days
-    })
+    // Set refresh token as HTTP-only cookie with dev/op friendly duration
+    setRefreshTokenCookie(reply, result.refresh_token)
 
     reply.send({
       success: true,
@@ -97,13 +106,8 @@ export async function signUp(
     const body = SignUpSchema.parse(request.body)
     const result = await this.authService.signUp(body)
 
-    // Set refresh token as HTTP-only cookie
-    reply.setCookie('refresh_token', result.refresh_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 // 7 days
-    })
+    // Set refresh token as HTTP-only cookie with dev/op friendly duration
+    setRefreshTokenCookie(reply, result.refresh_token)
 
     reply.code(201).send({
       success: true,
@@ -139,13 +143,8 @@ export async function refresh(
 
     const result = await this.authService.refreshToken(refreshToken)
 
-    // Set new refresh token as HTTP-only cookie
-    reply.setCookie('refresh_token', result.refresh_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 // 7 days
-    })
+    // Set new refresh token as HTTP-only cookie with dev/op friendly duration
+    setRefreshTokenCookie(reply, result.refresh_token)
 
     reply.send({
       success: true,
@@ -263,13 +262,8 @@ export async function handleOAuthCallback(
 
     const result = await this.authService.handleOAuthCallback(provider as any, mockProfile)
 
-    // Set refresh token as HTTP-only cookie
-    reply.setCookie('refresh_token', result.refresh_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 // 7 days
-    })
+    // Set refresh token as HTTP-only cookie with dev/op friendly duration
+    setRefreshTokenCookie(reply, result.refresh_token)
 
     reply.send({
       success: true,
